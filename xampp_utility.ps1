@@ -90,15 +90,18 @@ Function Write-CenterBlock {
 Function Write-Banner {
     Clear-Host
     Write-Divider
-    Write-CenterBlock " __  __   _      __  __  ____  ____    _   _ _   _ _ _ _         " "Magenta" 65
-    Write-CenterBlock " \ \/ /  / \    |  \/  ||  _ \|  _ \  | | | | |_(_) (_) |_ _   _ " "Magenta" 65
-    Write-CenterBlock "  \  /  / _ \   | |\/| || |_) | |_) | | | | | __| | | | __| | | |" "Magenta" 65
-    Write-CenterBlock "  /  \ / ___ \  | |  | ||  __/|  __/  | |_| | |_| | | | |_| |_| |" "Magenta" 65
-    Write-CenterBlock " /_/\_/_/   \_\ |_|  |_||_|   |_|      \___/ \__|_|_|_|\__|\__, |" "Magenta" 65
-    Write-CenterBlock "                                                          |___/  " "Magenta" 65
+    Write-CenterBlock "          ⚡  __  __    _    ___  ___  ____   ____   ⚡      " "Magenta" 60
+    Write-CenterBlock "          🚀  \ \/ /   / \   |  \/  | |  _ \ |  _ \  🚀      " "Magenta" 60
+    Write-CenterBlock "          🔥   \  /   / _ \  | |\/| | | ||_) | ||_)  🔥      " "Magenta" 60
+    Write-CenterBlock "          💎  /_/\_\ /_/ \_\ |_|  |_| |_|    |_|     💎      " "Magenta" 60
+    Write-Host ""
+    Write-CenterBlock "    ✨  _   _   ______   ___  ___    _____  _____  __   __  ✨    " "Cyan" 60
+    Write-CenterBlock "    📦 | | | | |__  __| |_ _| | |    |_ _| |__ __| \_\_/_/  📦    " "Cyan" 60
+    Write-CenterBlock "    🛠️ | |_| |   | |     |_|  | |__   | |    | |     | |    🛠️    " "Cyan" 60
+    Write-CenterBlock "    🌟  \___/    |_|    |___| |____| |___|   |_|     |_|    🌟    " "Cyan" 60
     Write-Divider
-    Write-CenterBlock "                 Automated XAMPP Utility Manager                 " "Yellow" 70
-    Write-CenterBlock "                       Created by Azeem Ali                      " "Green" 70
+    Write-CenterBlock "             🌟  Automated XAMPP Utility Manager  🌟             " "Yellow" 70
+    Write-CenterBlock "                   🛠️   Created by Azeem Ali  🛠️                 " "Green" 70
     Write-Divider
     Write-Host ""
 }
@@ -109,10 +112,10 @@ Function Write-Log {
     $LogMessage = "[$Timestamp] [$Level] $Message"
     
     switch ($Level) {
-        "INFO"    { Write-CenterBlock "  [+] $Message" "Green" 80 }
-        "WARNING" { Write-CenterBlock "  [!] $Message" "Yellow" 80 }
-        "ERROR"   { Write-CenterBlock "  [X] $Message" "Red" 80 }
-        "STEP"    { Write-CenterBlock "  [*] $Message" "Cyan" 80 }
+        "INFO"    { Write-CenterBlock "  ✅ $Message" "Green" 80 }
+        "WARNING" { Write-CenterBlock "  ⚠️  $Message" "Yellow" 80 }
+        "ERROR"   { Write-CenterBlock "  ❌ $Message" "Red" 80 }
+        "STEP"    { Write-CenterBlock "  🚀 $Message" "Cyan" 80 }
     }
     
     if (-not [string]::IsNullOrEmpty($LogPath)) {
@@ -137,16 +140,16 @@ Function Write-TerminalProgress {
     $BarWidth = 20
     $Filled = [math]::Floor(($Percent / 100) * $BarWidth)
     $Empty = $BarWidth - $Filled
-    $Bar = ("=" * $Filled) + (" " * $Empty)
+    $Bar = ("█" * $Filled) + ("░" * $Empty)
     
     $Cyan = $global:TokyoTheme["Cyan"]
     $Reset = $global:TokyoTheme["Reset"]
-    Write-Host "`r${Cyan}${Padding}    >> $Activity [$Bar] $Percent%   ${Reset}" -NoNewline
+    Write-Host "`r${Cyan}${Padding}    📦 $Activity [$Bar] $Percent%   ${Reset}" -NoNewline
 }
 
 Function End-Script {
     Write-Host ""
-    Write-CenterBlock "  -> Press any key to return to the main menu..." "Yellow" 80
+    Write-CenterBlock "  ⌨️  Press any key to return to the main menu..." "Yellow" 80
     $null = $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")
 }
 
@@ -173,14 +176,14 @@ Function Invoke-XamppBackup {
         }
     }
 
-    Write-Log -Message "Backup Session Started." -Level STEP -LogPath $LogFile
+    Write-Log -Message "Backup Session Started 🎬" -Level STEP -LogPath $LogFile
     Write-Log -Message "Target XAMPP Directory : $($global:XamppDir)" -Level INFO -LogPath $LogFile
     Write-Log -Message "Backup Destination     : $($global:BackupDest)" -Level INFO -LogPath $LogFile
     Write-Log -Message "Log File Path          : $LogFile" -Level INFO -LogPath $LogFile
     Write-Host ""
 
     if (-not (Test-Path -Path $global:XamppDir)) {
-        Write-Log -Message "XAMPP directory not found at $($global:XamppDir)! Please re-configure." -Level ERROR -LogPath $LogFile
+        Write-Log -Message "XAMPP directory not found at $($global:XamppDir)! 🔍 Please re-configure." -Level ERROR -LogPath $LogFile
         if (-not $Quiet) { End-Script }
         return $null
     }
@@ -191,7 +194,7 @@ Function Invoke-XamppBackup {
     $TotalDirs = $global:IncludePaths.Count
     $CurrentDirIndex = 0
 
-    Write-Log -Message "Stage 1: Gathering files for backup..." -Level STEP -LogPath $LogFile
+    Write-Log -Message "Stage 1: Gathering files for backup... 📂" -Level STEP -LogPath $LogFile
 
     foreach ($Item in $global:IncludePaths) {
         $CurrentDirIndex++
@@ -226,24 +229,24 @@ Function Invoke-XamppBackup {
     Write-Host ""
     Write-Host ""
 
-    Write-Log -Message "Stage 2: Compressing files to ZIP archive..." -Level STEP -LogPath $LogFile
+    Write-Log -Message "Stage 2: Compressing files to ZIP archive... 🗜️" -Level STEP -LogPath $LogFile
     Write-Log -Message "Archive: $BackupFile" -Level INFO -LogPath $LogFile
 
-    Write-CenterBlock "    >> Zipping files (this may take a few minutes)... " "Cyan" 80 -NoNewline
+    Write-CenterBlock "    🤐 Zipping files (this may take a few minutes)... " "Cyan" 80 -NoNewline
     try {
         Add-Type -AssemblyName System.IO.Compression.FileSystem
         if (Test-Path $BackupFile) { Remove-Item $BackupFile -Force | Out-Null }
         [System.IO.Compression.ZipFile]::CreateFromDirectory($TempDir, $BackupFile, [System.IO.Compression.CompressionLevel]::Optimal, $false)
-        Write-TokyoOutput "[DONE]" "Green"
+        Write-TokyoOutput " [DONE] 🎉" "Green"
         Write-Log -Message "Compression completed successfully." -Level INFO -LogPath $LogFile
     }
     catch {
-        Write-TokyoOutput "[FAILED]" "Red"
+        Write-TokyoOutput " [FAILED] ❌" "Red"
         Write-Log -Message "Failed to compress archive. Error: $_" -Level ERROR -LogPath $LogFile
     }
     Write-Host ""
 
-    Write-Log -Message "Stage 3: Cleaning up temporary files..." -Level STEP -LogPath $LogFile
+    Write-Log -Message "Stage 3: Cleaning up temporary files... 🧹" -Level STEP -LogPath $LogFile
     try {
         Remove-Item -Path $TempDir -Recurse -Force | Out-Null
         Write-Log -Message "Removed temporary folder: $TempDir" -Level INFO -LogPath $LogFile
@@ -253,11 +256,11 @@ Function Invoke-XamppBackup {
     }
     Write-Host ""
 
-    Write-Log -Message "Backup Session Finished Successfully!" -Level STEP -LogPath $LogFile
+    Write-Log -Message "Backup Session Finished Successfully! 🎊" -Level STEP -LogPath $LogFile
     Write-Host ""
     Write-CenterBlock "  =================================================================  " "DarkGray" 80
     
-    $SuccessMsg1 = "  SUCCESS: Backup securely stored at: "
+    $SuccessMsg1 = "  🏆 SUCCESS: Backup securely stored at: "
     Write-CenterBlock $SuccessMsg1 "Green" 80 -NoNewline
     Write-TokyoOutput $BackupFile "Cyan"
     
@@ -265,7 +268,7 @@ Function Invoke-XamppBackup {
     Write-Host ""
     
     if (-not $Quiet) {
-        Write-Log -Message "Opening backup destination folder..." -Level INFO -LogPath $LogFile
+        Write-Log -Message "Opening backup destination folder... 📁" -Level INFO -LogPath $LogFile
         Invoke-Item -Path $global:BackupDest
         End-Script
     }
@@ -751,27 +754,27 @@ Invoke-XamppDiscovery
 while ($true) {
     Write-Banner
     
-    Write-CenterBlock "--- MAIN MENU ---" "White" 80
+    Write-CenterBlock "--- 🛠️  MAIN MENU 🛠️  ---" "White" 80
     Write-Host ""
-    Write-CenterBlock "[1] Install Fresh XAMPP" "Green" 80
-    Write-CenterBlock "[2] Upgrade/Update XAMPP" "Green" 80
-    Write-CenterBlock "[3] Downgrade/Reinstall XAMPP" "Green" 80
-    Write-CenterBlock "[4] Backup Current Setup" "Yellow" 80
-    Write-CenterBlock "[5] Restore from Backup" "Yellow" 80
-    Write-CenterBlock "[6] Check for XAMPP Updates" "Magenta" 80
+    Write-CenterBlock "[1] 🆕 Install Fresh XAMPP" "Green" 80
+    Write-CenterBlock "[2] ⬆️  Upgrade/Update XAMPP" "Green" 80
+    Write-CenterBlock "[3] 🔄 Downgrade/Reinstall XAMPP" "Green" 80
+    Write-CenterBlock "[4] 💾 Backup Current Setup" "Yellow" 80
+    Write-CenterBlock "[5] 📂 Restore from Backup" "Yellow" 80
+    Write-CenterBlock "[6] 🔍 Check for XAMPP Updates" "Magenta" 80
     Write-Host ""
     
-    $configXamppStr = "[7] Config XAMPP Path     (Current: $($global:XamppDir))"
+    $configXamppStr = "[7] ⚙️  Config XAMPP Path     (Current: $($global:XamppDir))"
     Write-CenterBlock $configXamppStr "Cyan" 80
     
-    $configDestStr =  "[8] Config Backup Dest    (Current: $($global:BackupDest))"
+    $configDestStr =  "[8] 📂  Config Backup Dest    (Current: $($global:BackupDest))"
     Write-CenterBlock $configDestStr "Cyan" 80
     
     Write-Host ""
-    Write-CenterBlock "[9] Exit" "Red" 80
+    Write-CenterBlock "[9] 🚪 Exit" "Red" 80
     Write-Host ""
     Write-Divider
-    Write-CenterBlock "Please select an option (1-9): " "Yellow" 60 -NoNewline
+    Write-CenterBlock "👉 Please select an option (1-9): " "Yellow" 60 -NoNewline
 
     $choiceStr = Read-Host
 
