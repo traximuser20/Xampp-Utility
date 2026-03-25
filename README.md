@@ -91,7 +91,7 @@ The utility provides built-in configuration options:
 
 ## 👨‍💻 Author
 
-Created with ❤️ by **Azeem Ali**
+Created by **Azeem Ali**
 
 > _"Make server management a habit, not a chore."_
 
