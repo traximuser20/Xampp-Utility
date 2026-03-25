@@ -2,11 +2,12 @@
 
 # 🚀 Automated XAMPP Utility Manager
 
-![PowerShell](https://img.shields.io/badge/PowerShell-%235391FE.svg?style=for-the-badge&logo=powershell&logoColor=white)
+![PowerShell](https://img.shields.io/badge/PowerShell-%235391FE.svg?style=for-the-badge&logo=powerShell&logoColor=white)
 ![XAMPP](https://img.shields.io/badge/XAMPP-FB7A24?style=for-the-badge&logo=xampp&logoColor=white)
-![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)
 
-*A beautiful, interactive Text User Interface (TUI) script for safely and efficiently backing up your XAMPP server environments.*
+<!-- ![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge) -->
+
+_A beautiful, interactive Text User Interface (TUI) script for safely and efficiently backing up your XAMPP server environments._
 
 </div>
 
@@ -42,12 +43,15 @@ Tired of manually copying your `htdocs` or dragging your `mysql/data` around whe
 ### Installation & Usage
 
 #### 🚀 Option 1: Direct Run (Recommended)
+
 Run the script directly from GitHub without manual downloading:
+
 ```powershell
 powershell -ExecutionPolicy Bypass -Command "irm https://raw.githubusercontent.com/traximuser20/Xampp-Utility/main/xampp_utility.ps1 | iex"
 ```
 
 #### 📂 Option 2: Manual Download
+
 1. **Download** the [`xampp_utility.ps1`](https://github.com/traximuser20/Xampp-Utility/blob/main/xampp_utility.ps1) script to your computer.
 2. **Open PowerShell**.
 3. **Navigate** to the directory containing the script.
@@ -67,22 +71,22 @@ powershell -ExecutionPolicy Bypass -Command "irm https://raw.githubusercontent.c
 
 ## ⚙️ Configuration
 
-By default, the script looks for XAMPP at `C:\xampp` and saves backups to `D:\xampp_backups`. 
+By default, the script looks for XAMPP at `C:\xampp` and saves backups to `D:\xampp_backups`.
 You can easily change these directly from the in-app TUI using options `[2]` and `[3]`. The script dynamically adjusts to your custom paths for the current session!
 
 ---
 
 ## 📸 Sneak Peek
 
-*Run the script to be greeted by a custom ASCII banner and a clean interface that respects your terminal's dimensions! The script gracefully reports its status (`[+]`, `[*]`, `[!]`, `[X]`) keeping you informed at every step.*
+_Run the script to be greeted by a custom ASCII banner and a clean interface that respects your terminal's dimensions! The script gracefully reports its status (`[+]`, `[_]`, `[!]`, `[X]`) keeping you informed at every step.\*
 
 ---
 
 ## 👨‍💻 Author
 
-Created with ❤️ by **Azeem Ali**
+Created with by **Azeem Ali**
 
-> *"Make backups a habit, not an afterthought."*
+> _"Make backups a habit, not an afterthought."_
 
 ---
 

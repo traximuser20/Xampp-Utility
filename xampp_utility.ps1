@@ -55,7 +55,8 @@ Function Write-TokyoOutput {
     
     if ($NoNewline) {
         Write-Host "${AnsiColor}${Text}${Reset}" -NoNewline
-    } else {
+    }
+    else {
         Write-Host "${AnsiColor}${Text}${Reset}"
     }
 }
@@ -82,7 +83,8 @@ Function Write-CenterBlock {
     
     if ($NoNewline) {
         Write-TokyoOutput ($Padding + $Text) $Color -NoNewline
-    } else {
+    }
+    else {
         Write-TokyoOutput ($Padding + $Text) $Color
     }
 }
@@ -102,6 +104,12 @@ Function Write-Banner {
     Write-Divider
     Write-CenterBlock "             🌟  Automated XAMPP Utility Manager  🌟             " "Yellow" 70
     Write-CenterBlock "                   🛠️   Created by Azeem Ali  🛠️                 " "Green" 70
+    
+    $CurrentVer = Get-CurrentXamppVersion
+    if ($CurrentVer) {
+        Write-CenterBlock "                📦  Current XAMPP Version: $CurrentVer  📦                " "Cyan" 70
+    }
+
     Write-Divider
     Write-Host ""
 }
@@ -112,10 +120,10 @@ Function Write-Log {
     $LogMessage = "[$Timestamp] [$Level] $Message"
     
     switch ($Level) {
-        "INFO"    { Write-CenterBlock "  ✅ $Message" "Green" 80 }
+        "INFO" { Write-CenterBlock "  ✅  $Message" "Green" 80 }
         "WARNING" { Write-CenterBlock "  ⚠️  $Message" "Yellow" 80 }
-        "ERROR"   { Write-CenterBlock "  ❌ $Message" "Red" 80 }
-        "STEP"    { Write-CenterBlock "  🚀 $Message" "Cyan" 80 }
+        "ERROR" { Write-CenterBlock "  ❌  $Message" "Red" 80 }
+        "STEP" { Write-CenterBlock "  🚀  $Message" "Cyan" 80 }
     }
     
     if (-not [string]::IsNullOrEmpty($LogPath)) {
@@ -147,7 +155,7 @@ Function Write-TerminalProgress {
     Write-Host "`r${Cyan}${Padding}    📦 $Activity [$Bar] $Percent%   ${Reset}" -NoNewline
 }
 
-Function End-Script {
+Function Exit-Script {
     Write-Host ""
     Write-CenterBlock "  ⌨️  Press any key to return to the main menu..." "Yellow" 80
     $null = $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")
@@ -280,6 +288,20 @@ Function Invoke-XamppBackup {
 # Utility / Management Logic
 # ====================================================================
 
+Function Get-CurrentXamppVersion {
+    $PhpExe = Join-Path $global:XamppDir "php\php.exe"
+    if (Test-Path $PhpExe) {
+        try {
+            $PhpVerOutput = & $PhpExe -v | Select-Object -First 1
+            if ($PhpVerOutput -match "PHP\s+([\d\.]+)") {
+                return $matches[1]
+            }
+        }
+        catch {}
+    }
+    return $null
+}
+
 Function Get-XamppReleases {
     return [ordered]@{
         "8.2.12" = "https://sourceforge.net/projects/xampp/files/XAMPP%20Windows/8.2.12/xampp-portable-windows-x64-8.2.12-0-VS16.zip/download"
@@ -295,7 +317,8 @@ Function Invoke-XamppDownload {
     try {
         Invoke-WebRequest -Uri $Url -OutFile $Dest -UseBasicParsing
         return $true
-    } catch {
+    }
+    catch {
         Write-Log "Download failed: $_" -Level ERROR
         return $false
     }
@@ -319,7 +342,8 @@ Function Install-Xampp {
         Add-Type -AssemblyName System.IO.Compression.FileSystem
         [System.IO.Compression.ZipFile]::ExtractToDirectory($TempZip, $TempExtract)
         Write-TokyoOutput "[DONE]" "Green"
-    } catch {
+    }
+    catch {
         Write-TokyoOutput "[FAILED]" "Red"
         Write-Log "Extraction failed: $_" -Level ERROR
         return $false
@@ -338,7 +362,8 @@ Function Install-Xampp {
             return $false
         }
         Move-Item -Path $ExtractedXamppDir -Destination $TargetDir -Force
-    } catch {
+    }
+    catch {
         Write-Log "Failed to move XAMPP to target directory: $_" -Level ERROR
         return $false
     }
@@ -352,17 +377,20 @@ Function Install-Xampp {
             $null = & $SetupBat
             Set-Location $prevDir
             Write-Log "setup_xampp.bat completed successfully." -Level INFO
-        } catch {
+        }
+        catch {
             Write-Log "Failed to run setup_xampp.bat : $_" -Level WARNING
         }
-    } else {
+    }
+    else {
         Write-Log "setup_xampp.bat not found. Paths may need manual fixing." -Level WARNING
     }
     
     try {
         Remove-Item $TempZip -Force | Out-Null
         Remove-Item $TempExtract -Recurse -Force | Out-Null
-    } catch {}
+    }
+    catch {}
     
     return $true
 }
@@ -390,7 +418,8 @@ Function Restore-BackupArchive {
         Add-Type -AssemblyName System.IO.Compression.FileSystem
         [System.IO.Compression.ZipFile]::ExtractToDirectory($BackupZipPath, $TempExtract)
         Write-TokyoOutput "[DONE]" "Green"
-    } catch {
+    }
+    catch {
         Write-TokyoOutput "[FAILED]" "Red"
         Write-Log "Failed to extract backup zip: $_" -Level ERROR
         return $false
@@ -409,11 +438,13 @@ Function Restore-BackupArchive {
                 
                 if ((Get-Item $ExtractedPath) -is [System.IO.FileInfo]) {
                     Copy-Item -Path $ExtractedPath -Destination $DestPath -Force
-                } else {
+                }
+                else {
                     Copy-Item -Path "$ExtractedPath\*" -Destination $DestPath -Recurse -Force
                 }
                 Write-Log "Restored: $Item" -Level INFO
-            } catch {
+            }
+            catch {
                 Write-Log "Failed to restore $Item : $_" -Level WARNING
             }
         }
@@ -479,7 +510,8 @@ Function Invoke-XamppUpgrade {
     Write-Log "Renaming current XAMPP to: $OldDir" -Level STEP
     try {
         Rename-Item -Path $global:XamppDir -NewName (Split-Path $OldDir -Leaf) -Force
-    } catch {
+    }
+    catch {
         Write-Log "Failed to rename current XAMPP dir. Aborting." -Level ERROR
         End-Script
         return
@@ -568,13 +600,68 @@ Function Invoke-XamppRestoreMenu {
                     Write-Host ""
                     Write-CenterBlock "Restore completely finished!" "Green" 80
                 }
-            } else {
+            }
+            else {
                 Write-CenterBlock "Restore cancelled." "DarkGray" 80
             }
-        } else {
+        }
+        else {
             Write-CenterBlock "Invalid choice." "Red" 80
         }
     }
+    End-Script
+}
+
+Function Invoke-XamppUninstall {
+    Write-Banner
+    Write-CenterBlock "--- UNINSTALL XAMPP ---" "White" 80
+    
+    if (-not (Test-Path $global:XamppDir)) {
+        Write-CenterBlock "XAMPP installation not found at $($global:XamppDir)." "Yellow" 80
+        End-Script
+        return
+    }
+    
+    Write-Host ""
+    Write-CenterBlock "⚠️  WARNING: This will PERMANENTLY DELETE everything in: " "Red" 80
+    Write-CenterBlock "$($global:XamppDir)" "Cyan" 80
+    Write-Host ""
+    Write-CenterBlock "Would you like to create a backup before uninstalling? (Y/n): " "Yellow" 65 -NoNewline
+    $backupChoice = Read-Host
+    if ($backupChoice -notmatch "^n" -and $backupChoice -notmatch "^N") {
+        $BackupZip = Invoke-XamppBackup -Quiet
+        if (-not $BackupZip) {
+            Write-Log "Backup failed! Aborting uninstall for safety." -Level ERROR
+            End-Script
+            return
+        }
+    }
+
+    Write-Host ""
+    Write-CenterBlock "Are you ABSOLUTELY sure you want to uninstall XAMPP? (type 'DELETE' to confirm): " "Red" 75 -NoNewline
+    $confirm = Read-Host
+    
+    if ($confirm -eq "DELETE") {
+        Write-Log "Uninstalling XAMPP from $($global:XamppDir) ..." -Level STEP
+        try {
+            # Try to stop any running processes if possible (optional, but good practice)
+            # Stop-Process -Name "httpd", "mysqld" -ErrorAction SilentlyContinue
+            
+            Remove-Item -Path $global:XamppDir -Recurse -Force
+            Write-Host ""
+            Write-CenterBlock "  =================================================================  " "DarkGray" 80
+            Write-CenterBlock "  Uninstall Completed Successfully!  " "Green" 80
+            Write-CenterBlock "  =================================================================  " "DarkGray" 80
+        }
+        catch {
+            Write-Log "Failed to delete XAMPP directory: $_" -Level ERROR
+            Write-CenterBlock "Please ensure no files are open or services are running." "Yellow" 80
+        }
+    }
+    else {
+        Write-CenterBlock "Uninstall cancelled." "DarkGray" 80
+    }
+    
     End-Script
 }
 
@@ -583,21 +670,14 @@ Function Invoke-CheckXamppUpdate {
     Write-CenterBlock "--- CHECK FOR UPDATES ---" "White" 80
     Write-Host ""
     
-    $CurrentVersion = "Unknown"
-    $PhpExe = Join-Path $global:XamppDir "php\php.exe"
-    if (Test-Path $PhpExe) {
-        try {
-            $PhpVerOutput = & $PhpExe -v | Select-Object -First 1
-            if ($PhpVerOutput -match "PHP\s+([\d\.]+)") {
-                $CurrentVersion = $matches[1]
-            }
-        } catch {}
-    }
+    $CurrentVersion = Get-CurrentXamppVersion
     
-    if ($CurrentVersion -eq "Unknown") {
+    if (-not $CurrentVersion) {
+        $CurrentVersion = "Unknown"
         Write-CenterBlock "Could not determine local XAMPP version." "Yellow" 80
         Write-CenterBlock "Make sure XAMPP is installed at $($global:XamppDir)" "DarkGray" 80
-    } else {
+    }
+    else {
         Write-CenterBlock "Current XAMPP (PHP) Version: $CurrentVersion" "Cyan" 80
     }
     
@@ -610,14 +690,17 @@ Function Invoke-CheckXamppUpdate {
     
     if ($CurrentVersion -eq $LatestVersion) {
         Write-CenterBlock "You are fully up to date!" "Magenta" 80
-    } elseif ($CurrentVersion -ne "Unknown") {
+    }
+    elseif ($CurrentVersion -ne "Unknown") {
         try {
             if ([version]$CurrentVersion -lt [version]$LatestVersion) {
                 Write-CenterBlock "An update is available! Go to 'Upgrade/Update XAMPP' to install." "Yellow" 80
-            } else {
+            }
+            else {
                 Write-CenterBlock "You are fully up to date!" "Magenta" 80
             }
-        } catch {
+        }
+        catch {
             Write-CenterBlock "Version comparison failed." "DarkGray" 80
         }
     }
@@ -643,15 +726,16 @@ Function Invoke-ComposerInstall {
     try {
         Invoke-WebRequest -Uri $ComposerUrl -OutFile $ComposerSetup -UseBasicParsing
         Write-TokyoOutput "[DONE]" "Green"
-    } catch {
+    }
+    catch {
         Write-TokyoOutput "[FAILED]" "Red"
         return $false
     }
     
     Write-CenterBlock "    >> Running Composer setup... " "Cyan" 80 -NoNewline
     try {
-        $args = @($ComposerSetup, "--install-dir=$PhpPath", "--filename=composer.phar")
-        & $PhpExe $args | Out-Null
+        $composerArgs = @($ComposerSetup, "--install-dir=$PhpPath", "--filename=composer.phar")
+        & $PhpExe $composerArgs | Out-Null
         
         $ComposerBat = Join-Path $PhpPath "composer.bat"
         "@php `"%~dp0composer.phar`" %*" | Out-File $ComposerBat -Encoding ASCII
@@ -659,7 +743,8 @@ Function Invoke-ComposerInstall {
         Write-TokyoOutput "[DONE]" "Green"
         Write-Log "Composer installed successfully in $PhpPath" -Level INFO
         return $true
-    } catch {
+    }
+    catch {
         Write-TokyoOutput "[FAILED]" "Red"
         Write-Log "Composer setup failed: $_" -Level ERROR
         return $false
@@ -703,7 +788,8 @@ Function Invoke-XamppDiscovery {
         Write-CenterBlock "  [+] XAMPP Discovery Successful!  " "Green" 80
         Write-CenterBlock "  Location: $FoundPath  " "Cyan" 80
         Start-Sleep -Seconds 2
-    } else {
+    }
+    else {
         Write-CenterBlock "  [!] Automatic discovery could not find XAMPP.  " "Yellow" 80
         Write-Host ""
         Write-CenterBlock "  Would you like to install the latest XAMPP version? (y/N): " "Yellow" 65 -NoNewline
@@ -730,11 +816,13 @@ Function Invoke-XamppDiscovery {
                 if ($installComposer) {
                     Invoke-ComposerInstall -XamppPath $global:XamppDir
                 }
-            } else {
+            }
+            else {
                 Write-CenterBlock "  [X] XAMPP Installation Failed.  " "Red" 80
             }
             Start-Sleep -Seconds 3
-        } else {
+        }
+        else {
             Write-CenterBlock "  Falling back to default: $($global:XamppDir)  " "DarkGray" 80
             Start-Sleep -Seconds 2
         }
@@ -757,24 +845,25 @@ while ($true) {
     Write-CenterBlock "--- 🛠️  MAIN MENU 🛠️  ---" "White" 80
     Write-Host ""
     Write-CenterBlock "[1] 🆕 Install Fresh XAMPP" "Green" 80
-    Write-CenterBlock "[2] ⬆️  Upgrade/Update XAMPP" "Green" 80
+    Write-CenterBlock "[2] ⚡ Upgrade/Update XAMPP" "Green" 80
     Write-CenterBlock "[3] 🔄 Downgrade/Reinstall XAMPP" "Green" 80
     Write-CenterBlock "[4] 💾 Backup Current Setup" "Yellow" 80
     Write-CenterBlock "[5] 📂 Restore from Backup" "Yellow" 80
-    Write-CenterBlock "[6] 🔍 Check for XAMPP Updates" "Magenta" 80
+    Write-CenterBlock "[6] 🗑️ Uninstall XAMPP" "Red" 80
+    Write-CenterBlock "[7] 🔍 Check for XAMPP Updates" "Magenta" 80
     Write-Host ""
     
-    $configXamppStr = "[7] ⚙️  Config XAMPP Path     (Current: $($global:XamppDir))"
+    $configXamppStr = "[8] 📍 Config XAMPP Path     (Current: $($global:XamppDir))"
     Write-CenterBlock $configXamppStr "Cyan" 80
     
-    $configDestStr =  "[8] 📂  Config Backup Dest    (Current: $($global:BackupDest))"
+    $configDestStr = "[9] 📂 Config Backup Dest    (Current: $($global:BackupDest))"
     Write-CenterBlock $configDestStr "Cyan" 80
     
     Write-Host ""
-    Write-CenterBlock "[9] 🚪 Exit" "Red" 80
+    Write-CenterBlock "[0] 🚪 Exit" "Red" 80
     Write-Host ""
     Write-Divider
-    Write-CenterBlock "👉 Please select an option (1-9): " "Yellow" 60 -NoNewline
+    Write-CenterBlock "👉 Please select an option (0-9): " "Yellow" 60 -NoNewline
 
     $choiceStr = Read-Host
 
@@ -784,8 +873,9 @@ while ($true) {
         "3" { Invoke-XamppUpgrade -ModeName "Downgrade" }
         "4" { Invoke-XamppBackup }
         "5" { Invoke-XamppRestoreMenu }
-        "6" { Invoke-CheckXamppUpdate }
-        "7" {
+        "6" { Invoke-XamppUninstall }
+        "7" { Invoke-CheckXamppUpdate }
+        "8" {
             Write-Host "`n`n"
             Write-CenterBlock "[?] Enter new XAMPP directory path: " "Yellow" 60 -NoNewline
             $newDir = Read-Host
@@ -793,7 +883,7 @@ while ($true) {
                 $global:XamppDir = $newDir
             }
         }
-        "8" {
+        "9" {
             Write-Host "`n`n"
             Write-CenterBlock "[?] Enter new Backup Destination path: " "Yellow" 60 -NoNewline
             $newDest = Read-Host
@@ -801,7 +891,7 @@ while ($true) {
                 $global:BackupDest = $newDest
             }
         }
-        "9" {
+        "0" {
             Write-Host "`n`n"
             Write-CenterBlock "Exiting... Thank you for using XAMPP Utility Manager." "DarkGray" 80
             Start-Sleep -Seconds 1
