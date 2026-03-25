@@ -650,13 +650,22 @@ Function Invoke-XamppRestoreMenu {
 Function Invoke-XamppUninstall {
     Write-Banner
     Write-CenterBlock "--- UNINSTALL XAMPP ---" "White" 80
-    
+
     if (-not (Test-Path $global:XamppDir)) {
         Write-CenterBlock "XAMPP installation not found at $($global:XamppDir)." "Yellow" 80
         Exit-Script
         return
     }
-    
+
+    Write-Host ""
+    Write-CenterBlock "⚠️  WARNING: This will UNINSTALL XAMPP and delete all its contents!  " "Red" 80
+    $proceed = Read-KeyPress -ValidKeys ("y","Y","n","N") -Prompt "Are you sure you want to proceed? (y/N):"
+    if ($proceed -match "n|N") {
+        Write-CenterBlock "Uninstall cancelled." "DarkGray" 80
+        Exit-Script
+        return
+    }
+
     Write-Host ""
     Write-CenterBlock "⚠️  WARNING: This will PERMANENTLY DELETE everything in: " "Red" 80
     Write-CenterBlock "$($global:XamppDir)" "Cyan" 80
