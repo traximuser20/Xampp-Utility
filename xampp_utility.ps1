@@ -112,7 +112,7 @@ Function Write-Banner {
 
     Write-Divider
     Write-Host ""
-}
+    }
 
 Function Write-Log {
     param([string]$Message, [string]$Level = "INFO", [string]$LogPath)
@@ -161,6 +161,25 @@ Function Exit-Script {
     $null = $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")
 }
 
+Function Read-KeyPress {
+    param([string[]]$ValidKeys, [string]$Prompt)
+    if ($Prompt) {
+        Write-CenterBlock "$Prompt " "Yellow" 60 -NoNewline
+    }
+    
+    while ($true) {
+        if ($Host.UI.RawUI.KeyAvailable) {
+            $KeyInfo = $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")
+            $PressedKey = $KeyInfo.Character.ToString()
+            if ($ValidKeys -contains $PressedKey) {
+                Write-TokyoOutput $PressedKey "Cyan"
+                return $PressedKey
+            }
+        }
+        Start-Sleep -Milliseconds 50
+    }
+}
+
 # ====================================================================
 # Backup Logic
 # ====================================================================
@@ -179,7 +198,7 @@ Function Invoke-XamppBackup {
         }
         catch {
             Write-Log -Message "Failed to create backup directory. Aborting Backup." -Level ERROR -LogPath ""
-            if (-not $Quiet) { End-Script }
+            if (-not $Quiet) { Exit-Script }
             return $null
         }
     }
@@ -192,7 +211,7 @@ Function Invoke-XamppBackup {
 
     if (-not (Test-Path -Path $global:XamppDir)) {
         Write-Log -Message "XAMPP directory not found at $($global:XamppDir)! 🔍 Please re-configure." -Level ERROR -LogPath $LogFile
-        if (-not $Quiet) { End-Script }
+        if (-not $Quiet) { Exit-Script }
         return $null
     }
 
@@ -278,7 +297,7 @@ Function Invoke-XamppBackup {
     if (-not $Quiet) {
         Write-Log -Message "Opening backup destination folder... 📁" -Level INFO -LogPath $LogFile
         Invoke-Item -Path $global:BackupDest
-        End-Script
+        Exit-Script
     }
     
     return $BackupFile
@@ -464,12 +483,21 @@ Function Select-XamppVersion {
     for ($i = 0; $i -lt $Keys.Count; $i++) {
         Write-CenterBlock "[$($i + 1)] $($Keys[$i])" "Cyan" 80
     }
+    Write-CenterBlock "[B] Go Back to Main Menu" "Red" 80
     Write-Host ""
-    Write-CenterBlock "Select a version (1-$($Keys.Count)): " "Yellow" 60 -NoNewline
-    $choiceStr = Read-Host
-    if ([int]::TryParse($choiceStr, [ref]$null)) {
+    $ValidOptions = @("b", "B")
+    for ($i = 0; $i -lt $Keys.Count; $i++) {
+        $ValidOptions += ($i + 1).ToString()
+    }
+    
+    $choiceStr = Read-KeyPress -ValidKeys $ValidOptions -Prompt "Select a version (1-$($Keys.Count)) or [B] for Back:"
+    
+    if ($choiceStr -eq "b" -or $choiceStr -eq "B") {
+        return "BACK"
+    }
+
+    if ($choiceStr) {
         $idx = [int]$choiceStr - 1
-        if ($idx -lt 0 -or $idx -ge $Keys.Count) { return $null }
         return @{ Name = $Keys[$idx]; Url = $Releases[$Keys[$idx]] }
     }
     return $null
@@ -481,9 +509,10 @@ Function Invoke-XamppUpgrade {
     Write-CenterBlock "--- $ModeName XAMPP ---" "White" 80
     
     $VersionInfo = Select-XamppVersion
+    if ($VersionInfo -eq "BACK") { return }
     if (-not $VersionInfo) {
         Write-CenterBlock "Invalid selection. Aborting." "Red" 80
-        End-Script
+        Exit-Script
         return
     }
     
@@ -493,7 +522,7 @@ Function Invoke-XamppUpgrade {
     
     if (-not (Test-Path $global:XamppDir)) {
         Write-Log "Current XAMPP installation not found at $($global:XamppDir). Cannot $ModeName." -Level ERROR
-        End-Script
+        Exit-Script
         return
     }
     
@@ -501,7 +530,7 @@ Function Invoke-XamppUpgrade {
     $BackupZip = Invoke-XamppBackup -Quiet
     if (-not $BackupZip -or -not (Test-Path $BackupZip)) {
         Write-Log "Backup failed! Aborting $ModeName safely." -Level ERROR
-        End-Script
+        Exit-Script
         return
     }
     
@@ -513,13 +542,13 @@ Function Invoke-XamppUpgrade {
     }
     catch {
         Write-Log "Failed to rename current XAMPP dir. Aborting." -Level ERROR
-        End-Script
+        Exit-Script
         return
     }
     
     if (-not (Install-Xampp -VersionName $VersionInfo.Name -DownloadUrl $VersionInfo.Url -TargetDir $global:XamppDir)) {
         Write-Log "Installation Failed! You can manually revert by renaming $OldDir back to xampp." -Level ERROR
-        End-Script
+        Exit-Script
         return
     }
     
@@ -532,7 +561,7 @@ Function Invoke-XamppUpgrade {
     Write-CenterBlock "  $ModeName Completed Successfully!  " "Green" 80
     Write-CenterBlock "  Old version backed up completely to: $OldDir  " "DarkGray" 80
     Write-CenterBlock "  =================================================================  " "DarkGray" 80
-    End-Script
+    Exit-Script
 }
 
 Function Invoke-XamppInstall {
@@ -542,14 +571,15 @@ Function Invoke-XamppInstall {
     if (Test-Path $global:XamppDir) {
         Write-CenterBlock "XAMPP is already installed at $($global:XamppDir)!" "Red" 80
         Write-CenterBlock "Please use Upgrade/Downgrade or Reinstall instead." "Yellow" 80
-        End-Script
+        Exit-Script
         return
     }
     
     $VersionInfo = Select-XamppVersion
+    if ($VersionInfo -eq "BACK") { return }
     if (-not $VersionInfo) {
         Write-CenterBlock "Invalid selection. Aborting." "Red" 80
-        End-Script
+        Exit-Script
         return
     }
     
@@ -559,7 +589,7 @@ Function Invoke-XamppInstall {
         Write-CenterBlock "  Install Completed Successfully!  " "Green" 80
         Write-CenterBlock "  =================================================================  " "DarkGray" 80
     }
-    End-Script
+    Exit-Script
 }
 
 Function Invoke-XamppRestoreMenu {
@@ -568,14 +598,14 @@ Function Invoke-XamppRestoreMenu {
     
     if (-not (Test-Path $global:BackupDest)) {
         Write-CenterBlock "Backup destination folder not found." "Red" 80
-        End-Script
+        Exit-Script
         return
     }
     
     $Zips = Get-ChildItem -Path $global:BackupDest -Filter "*.zip" | Sort-Object CreationTime -Descending
     if ($Zips.Count -eq 0) {
         Write-CenterBlock "No backups found in $($global:BackupDest)." "Red" 80
-        End-Script
+        Exit-Script
         return
     }
     
@@ -584,32 +614,31 @@ Function Invoke-XamppRestoreMenu {
         Write-CenterBlock "[$($i + 1)] $($Zips[$i].Name) ($([math]::Round($Zips[$i].Length/1MB, 2)) MB)" "Cyan" 80
     }
     Write-Host ""
-    Write-CenterBlock "Select a backup to restore (1-$($Zips.Count)): " "Yellow" 60 -NoNewline
-    $choiceStr = Read-Host
-    if ([int]::TryParse($choiceStr, [ref]$null)) {
+    $ValidOptions = @()
+    for ($i = 0; $i -lt $Zips.Count; $i++) {
+        $ValidOptions += ($i + 1).ToString()
+    }
+    
+    $choiceStr = Read-KeyPress -ValidKeys $ValidOptions -Prompt "Select a backup to restore (1-$($Zips.Count)):"
+    
+    if ($choiceStr) {
         $idx = [int]$choiceStr - 1
-        if ($idx -ge 0 -and $idx -lt $Zips.Count) {
-            $SelectedZip = $Zips[$idx].FullName
-            
-            Write-Host ""
-            Write-CenterBlock "WARNING: This will overwrite files in $($global:XamppDir)!" "Red" 80
-            Write-CenterBlock "Proceed? (y/N): " "Yellow" 60 -NoNewline
-            $confirm = Read-Host
-            if ($confirm -match "^y" -or $confirm -match "^Y") {
-                if (Restore-BackupArchive -BackupZipPath $SelectedZip -TargetXamppDir $global:XamppDir) {
-                    Write-Host ""
-                    Write-CenterBlock "Restore completely finished!" "Green" 80
-                }
-            }
-            else {
-                Write-CenterBlock "Restore cancelled." "DarkGray" 80
+        $SelectedZip = $Zips[$idx].FullName
+        
+        Write-Host ""
+        Write-CenterBlock "WARNING: This will overwrite files in $($global:XamppDir)!" "Red" 80
+        $confirm = Read-KeyPress -ValidKeys ("y","Y","n","N") -Prompt "Proceed? (y/N):"
+        if ($confirm -match "^y" -or $confirm -match "^Y") {
+            if (Restore-BackupArchive -BackupZipPath $SelectedZip -TargetXamppDir $global:XamppDir) {
+                Write-Host ""
+                Write-CenterBlock "Restore completely finished!" "Green" 80
             }
         }
         else {
-            Write-CenterBlock "Invalid choice." "Red" 80
+            Write-CenterBlock "Restore cancelled." "DarkGray" 80
         }
     }
-    End-Script
+    Exit-Script
 }
 
 Function Invoke-XamppUninstall {
@@ -618,7 +647,7 @@ Function Invoke-XamppUninstall {
     
     if (-not (Test-Path $global:XamppDir)) {
         Write-CenterBlock "XAMPP installation not found at $($global:XamppDir)." "Yellow" 80
-        End-Script
+        Exit-Script
         return
     }
     
@@ -626,21 +655,19 @@ Function Invoke-XamppUninstall {
     Write-CenterBlock "⚠️  WARNING: This will PERMANENTLY DELETE everything in: " "Red" 80
     Write-CenterBlock "$($global:XamppDir)" "Cyan" 80
     Write-Host ""
-    Write-CenterBlock "Would you like to create a backup before uninstalling? (Y/n): " "Yellow" 65 -NoNewline
-    $backupChoice = Read-Host
-    if ($backupChoice -notmatch "^n" -and $backupChoice -notmatch "^N") {
+    $backupChoice = Read-KeyPress -ValidKeys ("y","Y","n","N","") -Prompt "Would you like to create a backup before uninstalling? (Y/n):"
+    if ($backupChoice -ne "n" -and $backupChoice -ne "N") {
         $BackupZip = Invoke-XamppBackup -Quiet
         if (-not $BackupZip) {
             Write-Log "Backup failed! Aborting uninstall for safety." -Level ERROR
-            End-Script
+            Exit-Script
             return
         }
     }
 
     Write-Host ""
     Write-CenterBlock "Are you ABSOLUTELY sure you want to uninstall XAMPP? (type 'DELETE' to confirm): " "Red" 75 -NoNewline
-    $confirm = Read-Host
-    
+    $confirm = Read-Host    
     if ($confirm -eq "DELETE") {
         Write-Log "Uninstalling XAMPP from $($global:XamppDir) ..." -Level STEP
         try {
@@ -662,7 +689,7 @@ Function Invoke-XamppUninstall {
         Write-CenterBlock "Uninstall cancelled." "DarkGray" 80
     }
     
-    End-Script
+    Exit-Script
 }
 
 Function Invoke-CheckXamppUpdate {
@@ -705,7 +732,7 @@ Function Invoke-CheckXamppUpdate {
         }
     }
     
-    End-Script
+    Exit-Script
 }
 
 Function Invoke-ComposerInstall {
@@ -792,8 +819,7 @@ Function Invoke-XamppDiscovery {
     else {
         Write-CenterBlock "  [!] Automatic discovery could not find XAMPP.  " "Yellow" 80
         Write-Host ""
-        Write-CenterBlock "  Would you like to install the latest XAMPP version? (y/N): " "Yellow" 65 -NoNewline
-        $installChoice = Read-Host
+        $installChoice = Read-KeyPress -ValidKeys ("y","Y","n","N","") -Prompt "  Would you like to install the latest XAMPP version? (y/N):"
         
         if ($installChoice -match "^y" -or $installChoice -match "^Y") {
             Write-Host ""
@@ -802,8 +828,7 @@ Function Invoke-XamppDiscovery {
             if ([string]::IsNullOrWhiteSpace($targetDir)) { $targetDir = "C:\xampp" }
             $global:XamppDir = $targetDir
 
-            Write-CenterBlock "  Do you want to install Composer? (y/N): " "Yellow" 65 -NoNewline
-            $composerChoice = Read-Host
+            $composerChoice = Read-KeyPress -ValidKeys ("y","Y","n","N","") -Prompt "  Do you want to install Composer? (y/N):"
             $installComposer = ($composerChoice -match "^y" -or $composerChoice -match "^Y")
 
             $Releases = Get-XamppReleases
@@ -863,9 +888,8 @@ while ($true) {
     Write-CenterBlock "[0] 🚪 Exit" "Red" 80
     Write-Host ""
     Write-Divider
-    Write-CenterBlock "👉 Please select an option (0-9): " "Yellow" 60 -NoNewline
 
-    $choiceStr = Read-Host
+    $choiceStr = Read-KeyPress -ValidKeys ("0","1","2","3","4","5","6","7","8","9") -Prompt "👉 Please select an option (0-9):"
 
     switch ($choiceStr) {
         "1" { Invoke-XamppInstall }
@@ -880,7 +904,14 @@ while ($true) {
             Write-CenterBlock "[?] Enter new XAMPP directory path: " "Yellow" 60 -NoNewline
             $newDir = Read-Host
             if (-not [string]::IsNullOrWhiteSpace($newDir)) {
-                $global:XamppDir = $newDir
+                if (Test-Path $newDir) {
+                    $global:XamppDir = $newDir
+                    Write-CenterBlock "  [+] XAMPP Path Updated!  " "Green" 80
+                }
+                else {
+                    Write-CenterBlock "  [!] Error: Path does not exist.  " "Red" 80
+                }
+                Start-Sleep -Seconds 1
             }
         }
         "9" {
@@ -889,6 +920,8 @@ while ($true) {
             $newDest = Read-Host
             if (-not [string]::IsNullOrWhiteSpace($newDest)) {
                 $global:BackupDest = $newDest
+                Write-CenterBlock "  [+] Backup Destination Updated!  " "Green" 80
+                Start-Sleep -Seconds 1
             }
         }
         "0" {
