@@ -622,9 +622,131 @@ Function Invoke-CheckXamppUpdate {
     End-Script
 }
 
+Function Invoke-ComposerInstall {
+    param([string]$XamppPath)
+    Write-Log "Stage: Installing Composer..." -Level STEP
+    $PhpPath = Join-Path $XamppPath "php"
+    $PhpExe = Join-Path $PhpPath "php.exe"
+    
+    if (-not (Test-Path $PhpExe)) {
+        Write-Log "Could not find php.exe at $PhpExe. Composer installation aborted." -Level ERROR
+        return $false
+    }
+    
+    $ComposerUrl = "https://getcomposer.org/installer"
+    $ComposerSetup = Join-Path $env:TEMP "composer-setup.php"
+    
+    Write-CenterBlock "    >> Downloading Composer installer... " "Cyan" 80 -NoNewline
+    try {
+        Invoke-WebRequest -Uri $ComposerUrl -OutFile $ComposerSetup -UseBasicParsing
+        Write-TokyoOutput "[DONE]" "Green"
+    } catch {
+        Write-TokyoOutput "[FAILED]" "Red"
+        return $false
+    }
+    
+    Write-CenterBlock "    >> Running Composer setup... " "Cyan" 80 -NoNewline
+    try {
+        $args = @($ComposerSetup, "--install-dir=$PhpPath", "--filename=composer.phar")
+        & $PhpExe $args | Out-Null
+        
+        $ComposerBat = Join-Path $PhpPath "composer.bat"
+        "@php `"%~dp0composer.phar`" %*" | Out-File $ComposerBat -Encoding ASCII
+        
+        Write-TokyoOutput "[DONE]" "Green"
+        Write-Log "Composer installed successfully in $PhpPath" -Level INFO
+        return $true
+    } catch {
+        Write-TokyoOutput "[FAILED]" "Red"
+        Write-Log "Composer setup failed: $_" -Level ERROR
+        return $false
+    }
+}
+
+# ====================================================================
+# Discovery Logic
+# ====================================================================
+
+Function Invoke-XamppDiscovery {
+    Write-Banner
+    Write-CenterBlock "Initializing XAMPP Discovery..." "Cyan" 80
+    Write-Host ""
+
+    $Spinner = @('|', '/', '-', '\')
+    $FoundPath = $null
+    
+    $Drives = [System.IO.DriveInfo]::GetDrives() | Where-Object { $_.DriveType -eq 'Fixed' -and $_.IsReady }
+    
+    $i = 0
+    foreach ($Drive in $Drives) {
+        $Root = $Drive.RootDirectory.FullName
+        for ($j = 0; $j -lt 4; $j++) {
+            $Char = $Spinner[$i % $Spinner.Count]
+            Write-CenterBlock "  [$Char] Scanning Drive $($Drive.Name) " "Yellow" 80 -NoNewline
+            Write-Host "`r" -NoNewline
+            Start-Sleep -Milliseconds 150
+            $i++
+        }
+
+        $TestPath = Join-Path $Root "xampp"
+        if (Test-Path (Join-Path $TestPath "php\php.exe")) {
+            $FoundPath = $TestPath
+            break
+        }
+    }
+
+    if ($FoundPath) {
+        $global:XamppDir = $FoundPath
+        Write-CenterBlock "  [+] XAMPP Discovery Successful!  " "Green" 80
+        Write-CenterBlock "  Location: $FoundPath  " "Cyan" 80
+        Start-Sleep -Seconds 2
+    } else {
+        Write-CenterBlock "  [!] Automatic discovery could not find XAMPP.  " "Yellow" 80
+        Write-Host ""
+        Write-CenterBlock "  Would you like to install the latest XAMPP version? (y/N): " "Yellow" 65 -NoNewline
+        $installChoice = Read-Host
+        
+        if ($installChoice -match "^y" -or $installChoice -match "^Y") {
+            Write-Host ""
+            Write-CenterBlock "  Enter installation directory (Default: C:\xampp): " "Yellow" 65 -NoNewline
+            $targetDir = Read-Host
+            if ([string]::IsNullOrWhiteSpace($targetDir)) { $targetDir = "C:\xampp" }
+            $global:XamppDir = $targetDir
+
+            Write-CenterBlock "  Do you want to install Composer? (y/N): " "Yellow" 65 -NoNewline
+            $composerChoice = Read-Host
+            $installComposer = ($composerChoice -match "^y" -or $composerChoice -match "^Y")
+
+            $Releases = Get-XamppReleases
+            $Latest = @{ Name = ($Releases.Keys)[0]; Url = ($Releases.Values)[0] }
+
+            Write-Host ""
+            if (Install-Xampp -VersionName $Latest.Name -DownloadUrl $Latest.Url -TargetDir $global:XamppDir) {
+                Write-CenterBlock "  [+] XAMPP Installation Successful!  " "Green" 80
+                
+                if ($installComposer) {
+                    Invoke-ComposerInstall -XamppPath $global:XamppDir
+                }
+            } else {
+                Write-CenterBlock "  [X] XAMPP Installation Failed.  " "Red" 80
+            }
+            Start-Sleep -Seconds 3
+        } else {
+            Write-CenterBlock "  Falling back to default: $($global:XamppDir)  " "DarkGray" 80
+            Start-Sleep -Seconds 2
+        }
+    }
+
+    Write-Host ""
+    Write-Divider
+}
+
 # ====================================================================
 # Main TUI Menu Loop
 # ====================================================================
+
+# Run discovery on startup
+Invoke-XamppDiscovery
 
 while ($true) {
     Write-Banner
