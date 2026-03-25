@@ -20,7 +20,13 @@ $ErrorActionPreference = "Stop"
 # ====================================================================
 
 $global:XamppDir = "C:\xampp"
-$global:BackupDest = "D:\xampp_backups"
+
+# Default Backup Destination Logic (Fallback to C:\ if D:\ is missing)
+if (Test-Path "D:\") {
+    $global:BackupDest = "D:\xampp_backups"
+} else {
+    $global:BackupDest = "C:\xampp_backups"
+}
 
 # Paths (Files or Directories) to include in backup (relative to XamppDir)
 $global:IncludePaths = @(
@@ -823,10 +829,22 @@ Function Invoke-XamppDiscovery {
         
         if ($installChoice -match "^y" -or $installChoice -match "^Y") {
             Write-Host ""
-            Write-CenterBlock "  Enter installation directory (Default: C:\xampp): " "Yellow" 65 -NoNewline
-            $targetDir = Read-Host
-            if ([string]::IsNullOrWhiteSpace($targetDir)) { $targetDir = "C:\xampp" }
-            $global:XamppDir = $targetDir
+            if (Test-Path "D:\") {
+                Write-CenterBlock "  Where would you like to install XAMPP?  " "Yellow" 80
+                Write-CenterBlock "  [C] C:\xampp  " "Cyan" 80
+                Write-CenterBlock "  [D] D:\xampp  " "Cyan" 80
+                $driveChoice = Read-KeyPress -ValidKeys ("c","C","d","D") -Prompt "  Select drive (C/D):"
+                if ($driveChoice -match "d|D") {
+                    $global:XamppDir = "D:\xampp"
+                } else {
+                    $global:XamppDir = "C:\xampp"
+                }
+            } else {
+                Write-CenterBlock "  [!] Drive D:\ not found. Defaulting to C:\  " "Yellow" 80
+                Write-CenterBlock "  Installing XAMPP in C:\xampp...  " "Cyan" 80
+                $global:XamppDir = "C:\xampp"
+                Start-Sleep -Seconds 2
+            }
 
             $composerChoice = Read-KeyPress -ValidKeys ("y","Y","n","N","") -Prompt "  Do you want to install Composer? (y/N):"
             $installComposer = ($composerChoice -match "^y" -or $composerChoice -match "^Y")
