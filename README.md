@@ -41,7 +41,14 @@ Tired of manually copying your `htdocs` or dragging your `mysql/data` around whe
 
 ### Installation & Usage
 
-1. **Download** the `xampp_utility.ps1` script to your computer.
+#### 🚀 Option 1: Direct Run (Recommended)
+Run the script directly from GitHub without manual downloading:
+```powershell
+powershell -ExecutionPolicy Bypass -Command "irm https://raw.githubusercontent.com/traximuser20/Xampp-Utility/main/xampp_utility.ps1 | iex"
+```
+
+#### 📂 Option 2: Manual Download
+1. **Download** the [`xampp_utility.ps1`](https://github.com/traximuser20/Xampp-Utility/blob/main/xampp_utility.ps1) script to your computer.
 2. **Open PowerShell**.
 3. **Navigate** to the directory containing the script.
 4. **Run the script**:
