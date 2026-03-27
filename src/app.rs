@@ -21,11 +21,12 @@ pub struct App {
     pub should_quit: bool,
     pub progress: f32,
     pub status: String,
+    pub xampp_version: Option<String>,
 }
 
 impl App {
     pub fn new() -> Result<Self> {
-        let mut config = Config::load()?;
+        let mut config = Config::load().unwrap_or_default();
         
         // Run discovery if xampp_path doesn't exist
         if !config.xampp_path.exists() {
@@ -35,6 +36,8 @@ impl App {
             }
         }
 
+        let xampp_version = crate::tasks::discovery::get_xampp_version(&config.xampp_path);
+
         Ok(Self {
             config,
             state: AppState::MainMenu,
@@ -43,6 +46,7 @@ impl App {
             should_quit: false,
             progress: 0.0,
             status: String::from("Ready"),
+            xampp_version,
         })
     }
 

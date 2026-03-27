@@ -1,4 +1,4 @@
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::fs;
 
 pub fn discover_xampp() -> Option<PathBuf> {
@@ -28,5 +28,23 @@ pub fn discover_xampp() -> Option<PathBuf> {
         }
     }
 
+    None
+}
+
+pub fn get_xampp_version(xampp_path: &Path) -> Option<String> {
+    let php_exe = xampp_path.join("php").join("php.exe");
+    if php_exe.exists() {
+        if let Ok(output) = std::process::Command::new(php_exe).arg("-v").output() {
+            let stdout = String::from_utf8_lossy(&output.stdout);
+            if let Some(line) = stdout.lines().next() {
+                if let Some(pos) = line.find("PHP ") {
+                    let version_part = &line[pos + 4..];
+                    if let Some(space_pos) = version_part.find(' ') {
+                        return Some(version_part[..space_pos].to_string());
+                    }
+                }
+            }
+        }
+    }
     None
 }

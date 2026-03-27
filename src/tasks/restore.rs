@@ -3,6 +3,7 @@ use std::fs::File;
 use std::path::Path;
 use zip::ZipArchive;
 
+#[allow(dead_code)]
 pub fn perform_restore(backup_zip_path: &Path, xampp_path: &Path) -> Result<()> {
     let file = File::open(backup_zip_path)?;
     let mut archive = ZipArchive::new(file)?;

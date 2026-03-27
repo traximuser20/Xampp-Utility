@@ -96,12 +96,21 @@ where
                                         app.state = AppState::Installing;
                                         start_install(app, tx.clone());
                                     }
+                                    1 => app.state = AppState::CheckingUpdates, // Upgrade placeholder
+                                    2 => app.state = AppState::CheckingUpdates, // Downgrade placeholder
                                     3 => {
                                         app.state = AppState::BackingUp;
                                         start_backup(app, tx.clone());
                                     }
-                                    9 => app.should_quit = true,
-                                    _ => app.state = AppState::CheckingUpdates, // Placeholder for others
+                                    4 => app.state = AppState::Restoring,
+                                    5 => app.state = AppState::Exiting,
+                                    6 => {
+                                        app.state = AppState::CheckingUpdates;
+                                        start_update_check(app, tx.clone());
+                                    }
+                                    7 => app.state = AppState::ConfigXamppPath,
+                                    8 => app.state = AppState::ConfigBackupPath,
+                                    _ => {}
                                 }
                             }
                             _ => {}
@@ -120,6 +129,40 @@ where
             return Ok(());
         }
     }
+}
+
+fn start_update_check(app: &App, tx: mpsc::Sender<AppEvent>) {
+    let current_version = app.xampp_version.clone();
+    let releases = crate::tasks::install::get_xampp_releases();
+    
+    tokio::spawn(async move {
+        let _ = tx.send(AppEvent::Status("Checking for updates...".to_string())).await;
+        let _ = tx.send(AppEvent::Log("Fetching latest XAMPP releases...".to_string())).await;
+        
+        if let Some(latest_version) = releases.keys().last() {
+            let _ = tx.send(AppEvent::Log(format!("Latest version found: {}", latest_version))).await;
+            
+            match current_version {
+                Some(current) => {
+                    if current == *latest_version {
+                        let _ = tx.send(AppEvent::Log("You are up to date! 🎉".to_string())).await;
+                        let _ = tx.send(AppEvent::Status("Up to date".to_string())).await;
+                    } else {
+                        let _ = tx.send(AppEvent::Log(format!("Update available! {} -> {}", current, latest_version))).await;
+                        let _ = tx.send(AppEvent::Status(format!("Update available: v{}", latest_version))).await;
+                    }
+                }
+                None => {
+                    let _ = tx.send(AppEvent::Log("Could not determine local version.".to_string())).await;
+                    let _ = tx.send(AppEvent::Status(format!("Latest: v{}", latest_version))).await;
+                }
+            }
+        } else {
+            let _ = tx.send(AppEvent::Log("Failed to fetch releases.".to_string())).await;
+        }
+        // Stay in CheckingUpdates state so user can see the result, or return to menu after a delay
+        // For now, let's just stay there until they press ESC
+    });
 }
 
 fn start_backup(app: &App, tx: mpsc::Sender<AppEvent>) {
