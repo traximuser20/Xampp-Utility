@@ -15,33 +15,44 @@ pub fn get_xampp_releases() -> BTreeMap<String, String> {
     releases
 }
 
-pub async fn download_xampp(url: &str, dest: &Path) -> Result<()> {
+pub async fn download_xampp<F>(url: &str, dest: &Path, on_progress: F) -> Result<()> 
+where F: Fn(f32) {
     let client = reqwest::Client::new();
     let response = client.get(url).send().await?;
+    let total_size = response.content_length().unwrap_or(0);
+    
     let mut file = tokio::fs::File::create(dest).await?;
     let mut stream = response.bytes_stream();
+    let mut downloaded: u64 = 0;
 
     while let Some(item) = stream.next().await {
         let chunk = item?;
         file.write_all(&chunk).await?;
+        downloaded += chunk.len() as u64;
+        
+        if total_size > 0 {
+            on_progress(downloaded as f32 / total_size as f32);
+        }
     }
 
     Ok(())
 }
 
-pub fn install_xampp(zip_path: &Path, target_dir: &Path) -> Result<()> {
+pub fn install_xampp<F>(zip_path: &Path, target_dir: &Path, on_progress: F) -> Result<()> 
+where F: Fn(f32) {
     let file = File::open(zip_path)?;
     let mut archive = ZipArchive::new(file)?;
+    let total = archive.len();
 
     if !target_dir.exists() {
         std::fs::create_dir_all(target_dir)?;
     }
 
-    for i in 0..archive.len() {
+    for i in 0..total {
+        on_progress(i as f32 / total as f32);
         let mut file = archive.by_index(i)?;
         let name = file.name().to_string();
         
-        // The zip usually has a 'xampp/' root folder
         let out_path = if name.starts_with("xampp/") {
             target_dir.join(name.strip_prefix("xampp/").unwrap().replace("/", "\\"))
         } else {
@@ -61,6 +72,7 @@ pub fn install_xampp(zip_path: &Path, target_dir: &Path) -> Result<()> {
         }
     }
 
+    on_progress(1.0);
     // Run setup_xampp.bat if it exists
     let setup_bat = target_dir.join("setup_xampp.bat");
     if setup_bat.exists() {

@@ -3,12 +3,14 @@ use std::fs::File;
 use std::path::Path;
 use zip::ZipArchive;
 
-#[allow(dead_code)]
-pub fn perform_restore(backup_zip_path: &Path, xampp_path: &Path) -> Result<()> {
+pub fn perform_restore<F>(backup_zip_path: &Path, xampp_path: &Path, on_progress: F) -> Result<()> 
+where F: Fn(f32) {
     let file = File::open(backup_zip_path)?;
     let mut archive = ZipArchive::new(file)?;
+    let total = archive.len();
 
-    for i in 0..archive.len() {
+    for i in 0..total {
+        on_progress(i as f32 / total as f32);
         let mut file = archive.by_index(i)?;
         let out_path = xampp_path.join(file.name().replace("/", "\\"));
 

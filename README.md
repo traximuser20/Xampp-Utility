@@ -1,12 +1,13 @@
 <div align="center">
 
-# 🚀 Automated XAMPP Utility Manager (Rust Edition)
+# 🚀 XAMPP Utility: Next-Gen Environment Manager
 
 ![Rust](https://img.shields.io/badge/Rust-000000?style=for-the-badge&logo=rust&logoColor=white)
-![Ratatui](https://img.shields.io/badge/Ratatui-E32227?style=for-the-badge&logo=rust&logoColor=white)
+![Tauri](https://img.shields.io/badge/Tauri-24C8DB?style=for-the-badge&logo=tauri&logoColor=white)
+![Svelte](https://img.shields.io/badge/Svelte-FF3E00?style=for-the-badge&logo=svelte&logoColor=white)
 ![XAMPP](https://img.shields.io/badge/XAMPP-FB7A24?style=for-the-badge&logo=xampp&logoColor=white)
 
-_A high-performance, standalone Text User Interface (TUI) application for safely and efficiently managing your XAMPP server environments._
+_A high-performance, modern Desktop application for safely and efficiently managing your XAMPP server environments._
 
 </div>
 
@@ -14,32 +15,29 @@ _A high-performance, standalone Text User Interface (TUI) application for safely
 
 ## 🌟 Overview
 
-**Automated XAMPP Utility Manager** has been rewritten from the ground up in **Rust**. It provides a faster, more robust, and highly interactive terminal experience for managing your XAMPP installations. Whether you're installing a fresh environment, switching versions, or securing your `mysql/data`, this utility handles it all with safety and precision.
+**XAMPP Utility** has evolved! Transitioning from a TUI to a full-featured Desktop GUI, this utility combines the speed of **Rust (Tauri)** with the elegance of **Svelte 5**. It provides a "Next-Gen" experience for managing XAMPP installations with a focus on aesthetics, responsiveness, and safety.
 
 ## ✨ Key Features
 
-- **🔍 Auto-Discovery:** Instant scanning of drives to locate existing XAMPP installations on startup.
+- **🎨 Modern Glassmorphic UI:** A beautiful, transparent interface with vibrant animated backgrounds.
+- **🌓 Dark Mode Support:** Full theme synchronization with system preferences and a manual toggle.
+- **✨ Fluid Animations:** Smooth Svelte transitions, staggered component entry, and interactive micro-animations.
+- **🚀 Animated Splash Screen:** A professional startup sequence for a premium app feel.
+- **🔍 Auto-Discovery:** One-click scanning to locate XAMPP installations.
 - **📦 Full Lifecycle Management:**
-  - **Install:** Automated download and extraction of various XAMPP/PHP versions.
-  - **Upgrade/Downgrade:** Seamless version switching with automatic pre-operation backups.
-  - **Uninstall:** Secure removal with data protection prompts.
-- **💾 Smart Backup & Restore:**
-  - High-speed ZIP compression for `htdocs`, `mysql\data`, `apache\conf`, and critical config files.
-  - Interactive restore management with historical backup tracking.
-- **⚡ Async Architecture:** Powered by `Tokio`, ensuring the UI stays responsive during long-running downloads or backups.
-- **🎨 Modern TUI:** A rich terminal interface built with `Ratatui`, featuring:
-  - Real-time logging console.
-  - Task progress tracking.
-  - Interactive menu navigation with Arrow keys or `hjkl`.
-- **🛠️ Integrated Configuration:** Persistent JSON-based settings for XAMPP paths and backup destinations.
+  - **Install:** Automated download and extraction of XAMPP/PHP versions.
+  - **Backup & Restore:** High-speed ZIP compression for `htdocs`, `mysql\data`, and configurations.
+  - **Updates:** Instant check for the latest XAMPP releases.
+- **⚡ Async Architecture:** Powered by **Tokio** and **Tauri Events**, ensuring the UI never freezes during heavy tasks.
+- **📜 Live Activity Feed:** A real-time, animated log view to track every operation.
 
 ---
 
 ## 📸 Preview
 
 <div align="center">
-  <img src="./assets/rust_TUI.png" alt="XAMPP Utility Manager TUI Preview" width="800">
-  <p><i>The new Rust-powered TUI featuring real-time logging and interactive task management.</i></p>
+  <img src="./assets/tauri_GUI.png" alt="XAMPP Utility GUI Preview" width="800">
+  <p><i>The new "Next-Gen" GUI featuring glassmorphism, dark mode, and real-time logs.</i></p>
 </div>
 
 ---
@@ -48,46 +46,39 @@ _A high-performance, standalone Text User Interface (TUI) application for safely
 
 ### Prerequisites
 
-- **Windows OS** (Primary target)
-- **Rust Toolchain:** [Install Rust](https://rustup.rs/) (MSVC toolchain recommended)
-- **Visual Studio Build Tools:** Required for compilation on Windows.
+- **Windows OS**
+- **Rust Toolchain:** [Install Rust](https://rustup.rs/)
+- **Node.js:** [Install Node.js](https://nodejs.org/) (for the Svelte frontend)
+- **Tauri Dependencies:** Follow the [Tauri Setup Guide](https://tauri.app/v1/guides/getting-started/prerequisites)
 
-### Installation & Usage
-
-#### 🛠️ Build from Source
+### Installation & Development
 
 1. **Clone the repository:**
    ```bash
    git clone https://github.com/traximuser20/Xampp-Utility.git
    cd Xampp-Utility
    ```
-2. **Run the application:**
+2. **Install frontend dependencies:**
    ```bash
-   cargo run --release
+   npm install
    ```
-3. **Build the standalone binary:**
+3. **Run in Development Mode:**
    ```bash
-   cargo build --release
+   npm run tauri dev
    ```
-   The executable will be located at `./target/release/xampp-utility.exe`.
+4. **Build the Production App:**
+   ```bash
+   npm run tauri build
+   ```
+   The installer will be located in `src-tauri/target/release/bundle/msi/`.
 
 ---
 
-## ⌨️ Controls
+## ⚙️ Project Structure
 
-- **Arrow Keys / `j`/`k`:** Navigate the menu.
-- **Enter:** Select an option.
-- **Esc:** Return to the main menu from any task.
-- **`q`:** Quit the application.
-
----
-
-## ⚙️ Configuration
-
-Settings are automatically managed in `config.json` within the application directory:
-
-- **xampp_path:** Path to your XAMPP installation (Default: `C:\xampp`).
-- **backup_path:** Directory for storing `.zip` backups (Default: `D:\xampp_backups` or `C:\xampp_backups`).
+- **`/src`**: Svelte 5 frontend with modern CSS and animations.
+- **`/src-tauri`**: Rust backend handling core logic, file operations, and Tauri commands.
+- **`/assets`**: Project icons and preview images.
 
 ---
 
@@ -95,7 +86,7 @@ Settings are automatically managed in `config.json` within the application direc
 
 Created by **Azeem Ali**
 
-> _"Blazing fast server management, now in Rust."_
+> _"Blazing fast server management, now with a beautiful face."_
 
 ---
 
